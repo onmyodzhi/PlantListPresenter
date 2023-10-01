@@ -1,32 +1,27 @@
 package com.example.myapplication
 
-import android.os.Build
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.view.Window
-import androidx.core.content.ContextCompat
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.myapplication.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
     lateinit var binding: ActivityMainBinding
     private val adapter = PlantAdapter()
-    private val imageIdList = listOf(R.drawable.plant_1,
-        R.drawable.plant_2,
-        R.drawable.plant_3,
-        R.drawable.plant_4,
-        R.drawable.plant_5)
-    private var temp = 0
+    private var editLauncher: ActivityResultLauncher<Intent>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         init()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            val window: Window = window
-            window.statusBarColor = ContextCompat.getColor(this, R.color.status_bar_color)
+        editLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
+            if(it.resultCode == RESULT_OK){
+                adapter.addPlant(it.data?.getSerializableExtra("plant") as Plant)
+            }
         }
     }
 
@@ -36,15 +31,7 @@ class MainActivity : AppCompatActivity() {
             rcView.adapter = adapter
 
             button.setOnClickListener {
-                val plantImageName = resources.getResourceEntryName(R.drawable.plant_1)
-                val plant = Plant(imageIdList[temp], plantImageName)
-                temp++
-                if (temp >= imageIdList.size){
-                    temp = 0
-                }
-
-                adapter.addPlant(plant)
-
+                editLauncher?.launch(Intent(this@MainActivity, EditActivity::class.java))
             }
         }
     }
